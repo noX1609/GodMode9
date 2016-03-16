@@ -17,5 +17,5 @@ u8 CheckNandType(bool check_emunand);
 
 bool InitEmuNandBase(void);
 u32 GetEmuNandBase(void);
-u32 SwitchEmuNandBase(int start_sector);
+u32 SwitchEmuNandBase(void);
 

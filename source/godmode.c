@@ -77,16 +77,25 @@ void DrawUserInterface(const char* curr_path, DirEntry* curr_entry, DirStruct* c
     
     // bottom: inctruction block
     char instr[256];
-    snprintf(instr, 256, "%s%s\n%s%s%s%s",
-        "GodMode9 Explorer v", VERSION, // generic start part
-        (*curr_path) ? ((clipboard->n_entries == 0) ? "L - MARK files (use with \x18\x19\x1A\x1B)\nX - DELETE / [+R] RENAME file(s)\nY - COPY file(s) / [+R] CREATE dir\n" :
-        "L - MARK files (use with \x18\x19\x1A\x1B)\nX - DELETE / [+R] RENAME file(s)\nY - PASTE file(s) / [+R] CREATE dir\n") :
-        ((GetWritePermissions() <= 1) ? "X - Unlock EmuNAND writing\nY - Unlock SysNAND writing\nB - Unmount SD card\n" :
-        (GetWritePermissions() == 2) ? "X - Relock EmuNAND writing\nY - Unlock SysNAND writing\nB - Unmount SD card\n" :
-        "X - Relock EmuNAND writing\nY - Relock SysNAND writing\nB - Unmount SD card\n"),
-        "R+L - Make a Screenshot\n",
-        (clipboard->n_entries) ? "SELECT - Clear Clipboard\n" : "SELECT - Restore Clipboard\n", // only if clipboard is full
-        "START - Reboot / [+\x1B] Poweroff"); // generic end part
+    if (*curr_path) { // outside of root path (aka everywhere)
+        snprintf(instr, 256, "%s%s\n%s%s%s%s",
+            "GodMode9 Explorer v", VERSION, // generic start part
+            (clipboard->n_entries == 0) ? "L - MARK files (use with \x18\x19\x1A\x1B)\nX - DELETE / [+R] RENAME file(s)\nY - COPY file(s) / [+R] CREATE dir\n" :
+            "L - MARK files (use with \x18\x19\x1A\x1B)\nX - DELETE / [+R] RENAME file(s)\nY - PASTE file(s) / [+R] CREATE dir\n",
+            "R+L - Make a Screenshot\n",
+            (clipboard->n_entries) ? "SELECT - Clear Clipboard\n" : "SELECT - Restore Clipboard\n", // only if clipboard is full
+            "START - Reboot / [+\x1B] Poweroff"); // generic end part
+    } else { // in root path
+        snprintf(instr, 256, "%s%s\n%s (current %06X)\n%s%s%s%s",
+            "GodMode9 Explorer v", VERSION, // generic start part
+            "L - Switch EmuNAND ", GetEmuNandBase(),
+            (GetWritePermissions() <= 1) ? "X - Unlock EmuNAND writing\nY - Unlock SysNAND writing\nB - Unmount SD card\n" :
+            (GetWritePermissions() == 2) ? "X - Relock EmuNAND writing\nY - Unlock SysNAND writing\nB - Unmount SD card\n" :
+            "X - Relock EmuNAND writing\nY - Relock SysNAND writing\nB - Unmount SD card\n",
+            "R+L - Make a Screenshot\n",
+            (clipboard->n_entries) ? "SELECT - Clear Clipboard\n" : "SELECT - Restore Clipboard\n", // only if clipboard is full
+            "START - Reboot / [+\x1B] Poweroff"); // generic end part
+    }
     DrawStringF(true, instr_x, SCREEN_HEIGHT - 4 - GetDrawStringHeight(instr), COLOR_STD_FONT, COLOR_STD_BG, instr);
 }
 
@@ -224,6 +233,14 @@ u32 GodMode() {
                 current_dir->entry[cursor].marked ^= 0x1;
                 mark_setting = current_dir->entry[cursor].marked;
             }
+        } else if (!*current_path && (pad_state & BUTTON_L1)) { // switch EmuNAND
+            DeinitFS(); // deinit file system
+            if (!InitSDCardFS()) {
+                ShowPrompt(false, "Unknown error");
+                return exit_mode;
+            }
+            SwitchEmuNandBase();
+            InitNandFS();
         } else if (pad_state & BUTTON_SELECT) { // clear/restore clipboard
             clipboard->n_entries = (clipboard->n_entries > 0) ? 0 : last_clipboard_size;
         }

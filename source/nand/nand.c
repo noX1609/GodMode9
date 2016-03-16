@@ -187,9 +187,23 @@ u32 GetEmuNandBase(void)
     return emunand_base_sector;
 }
 
-u32 SwitchEmuNandBase(int start_sector)
+u32 SwitchEmuNandBase(void)
 {
-    // switching code goes here
+    // careful with the clipboard when switching -> might still contain stuff from older EmuNAND (!!!)
+    u32 last_valid = (emunand_base_sector % 0x200000 <= 1) ? emunand_base_sector : emunand_base_sector - (emunand_base_sector % 0x200000);
+    do {
+        if ((GetPartitionOffsetSector("0:") - emunand_base_sector) <= getMMCDevice(0)->total_size) {
+            emunand_base_sector = 0x000000;
+        } else if (emunand_base_sector % 0x200000 == 0)  { // GW type EmuNAND
+            emunand_base_sector += 0x000001;
+        } else { // RedNAND type EmuNAND
+            emunand_base_sector -= emunand_base_sector % 0x200000;
+            emunand_base_sector += 0x200000;
+        }
+        if (CheckNandType(true) != NAND_TYPE_UNK)
+            break;
+    } while (emunand_base_sector != last_valid);
+    
     return emunand_base_sector;
 }
 
