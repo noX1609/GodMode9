@@ -29,7 +29,7 @@
         "SYSNAND CTRNAND", "SYSNAND TWLN", "SYSNAND TWLP", \
         "EMUNAND CTRNAND", "EMUNAND TWLN", "EMUNAND TWLP", \
         "IMGNAND CTRNAND", "IMGNAND TWLN", "IMGNAND TWLP", \
-        "GAME IMAGE", \
+        "GAME IMAGE", "TICKET.DB IMAGE", \
         "SYSNAND SD", "EMUNAND SD", \
         "SYSNAND VIRTUAL", "EMUNAND VIRTUAL", "IMGNAND VIRTUAL", \
         "NAND XORPADS", \
@@ -37,7 +37,7 @@
         "LAST SEARCH" \
         
 #define FS_DRVNUM \
-    "0:", "1:", "2:", "3:", "4:", "5:", "6:", "7:", "8:", "9:", "G:", "A:", "B:", "S:", "E:", "I:", "X:", "M:", "Z:"
+    "0:", "1:", "2:", "3:", "4:", "5:", "6:", "7:", "8:", "9:", "G:", "T:", "A:", "B:", "S:", "E:", "I:", "X:", "M:", "Z:"
 
 /** Function to identify the type of a drive **/
 int DriveType(const char* path);

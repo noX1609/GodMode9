@@ -4,6 +4,7 @@
 
 u32 IdentifyFileType(const char* path) {
     const u8 romfs_magic[] = { ROMFS_MAGIC };
+    const u8 tickdb_magic[] = { TICKDB_MAGIC };
     u8 header[0x200] __attribute__((aligned(32))); // minimum required size
     size_t fsize = FileGetSize(path);
     if (FileGetData(path, header, 0x200, 0) != 0x200) return 0;
@@ -43,6 +44,8 @@ u32 IdentifyFileType(const char* path) {
     } else if (strncmp(TMD_ISSUER, (char*) (header + 0x140), 0x40) == 0) {
         if (fsize >= TMD_SIZE_N(getbe16(header + 0x1DE)))
             return GAME_TMD; // TMD file
+    } else if (memcmp(header + 0x100, tickdb_magic, sizeof(tickdb_magic)) == 0) {
+        return SYS_TICKDB; // ticket.db
     }
     
     return 0;

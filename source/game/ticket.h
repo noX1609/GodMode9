@@ -53,8 +53,39 @@ typedef struct {
     u8 content_index[0xAC];
 } __attribute__((packed)) Ticket;
 
+typedef struct {
+    u32 commonkey_idx;
+    u32 offset;
+    u8  title_id[8];
+    u8  titlekey[16];
+    u8  ticket_id[8];
+	u8  console_id[4];
+    u8  eshop_id[4];
+} __attribute__((packed)) TicketEntry;
+
+typedef struct {
+    u32 n_entries;
+    u8  reserved[12];
+    TicketEntry entries[256]; // this number is only a placeholder
+} __attribute__((packed)) TicketInfo;
+
+typedef struct {
+    u32 commonkey_idx;
+    u8  reserved[4];
+    u8  title_id[8];
+    u8  titlekey[16];
+} __attribute__((packed)) TitleKeyEntry;
+
+typedef struct {
+    u32 n_entries;
+    u8  reserved[12];
+    TitleKeyEntry entries[256]; // this number is only a placeholder
+} __attribute__((packed)) TitleKeysInfo;
+
 u32 ValidateTicket(Ticket* ticket);
 u32 GetTitleKey(u8* titlekey, Ticket* ticket);
 u32 FindTicket(Ticket* ticket, u8* title_id, bool force_legit, bool emunand);
 u32 FindTitleKey(Ticket* ticket, u8* title_id);
+u32 AddTicketInfo(TicketInfo* info, Ticket* ticket, u32 offset);
+u32 BuildTitleKeyInfo(TitleKeysInfo* tik_info, TicketInfo* tick_info, bool decrypt);
 u32 BuildFakeTicket(Ticket* ticket, u8* title_id);

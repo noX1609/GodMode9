@@ -599,7 +599,8 @@ u32 FileHandlerMenu(char* current_path, u32* cursor, u32* scroll, DirStruct* cur
         (filetype == GAME_NCCH ) ? "NCCH image options..." :
         (filetype == GAME_EXEFS) ? "Mount as EXEFS image"  :
         (filetype == GAME_ROMFS) ? "Mount as ROMFS image"  :
-        (filetype == GAME_TMD)   ? "TMD file options..." : "???";
+        (filetype == GAME_TMD  ) ? "TMD file options..."   :
+        (filetype == SYS_TICKDB) ? "Mount as ticket.db" : "???";
     optionstr[hexviewer-1] = "Show in Hexeditor";
     optionstr[calcsha-1] = "Calculate SHA-256";
     if (inject > 0) optionstr[inject-1] = "Inject data @offset";
@@ -663,7 +664,7 @@ u32 FileHandlerMenu(char* current_path, u32* cursor, u32* scroll, DirStruct* cur
         if (clipboard->n_entries && (DriveType(clipboard->entry[0].path) & DRV_IMAGE))
             clipboard->n_entries = 0; // remove last mounted image clipboard entries
         InitImgFS(curr_entry->path);
-        if (!(DriveType("7:")||DriveType("G:"))) {
+        if (!(DriveType("7:")||DriveType("G:")||DriveType("T:"))) {
             ShowPrompt(false, "Mounting image: failed");
             InitImgFS(NULL);
         } else {

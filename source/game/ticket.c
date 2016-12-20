@@ -2,19 +2,6 @@
 #include "aes.h"
 #include "ff.h"
 
-typedef struct {
-    u32 commonkey_idx;
-    u8  reserved[4];
-    u8  title_id[8];
-    u8  titlekey[16];
-} __attribute__((packed)) TitleKeyEntry;
-
-typedef struct {
-    u32 n_entries;
-    u8  reserved[12];
-    TitleKeyEntry entries[256]; // this number is only a placeholder
-} __attribute__((packed)) TitleKeysInfo;
-
 u32 ValidateTicket(Ticket* ticket) {
     const u8 magic[] = { TICKET_SIG_TYPE };
     if ((memcmp(ticket->sig_type, magic, sizeof(magic)) != 0) ||
@@ -135,6 +122,49 @@ u32 FindTitleKey(Ticket* ticket, u8* title_id) {
     }
     
     return (found) ? 0 : 1;
+}
+
+u32 AddTicketInfo(TicketInfo* info, Ticket* ticket, u32 offset) {
+    if (ValidateTicket(ticket) != 0) return 1;
+    
+    // build ticket entry
+    TicketEntry* entry = info->entries + info->n_entries;
+    entry->commonkey_idx = ticket->commonkey_idx;
+    entry->offset = offset;
+    memcpy(entry->title_id, ticket->title_id, 8);
+    memcpy(entry->titlekey, ticket->titlekey, 16);
+    memcpy(entry->ticket_id, ticket->ticket_id, 8);
+    memcpy(entry->console_id, ticket->console_id, 4);
+    memcpy(entry->eshop_id, ticket->eshop_id, 4);
+    
+    // check for duplicate
+    u32 t = 0;
+    for (; t < info->n_entries; t++) {
+        TicketEntry* entry0 = info->entries + t;
+        if (memcmp(entry->title_id, entry0->title_id, 8) != 0) continue;
+        if (!getbe64(entry0->console_id)) // replace this
+            memcpy(entry0, entry, sizeof(TicketEntry));
+        break;
+    }
+    if (t >= info->n_entries)
+        info->n_entries++; // new entry
+    
+    return 0;
+}
+
+u32 BuildTitleKeyInfo(TitleKeysInfo* tik_info, TicketInfo* tick_info, bool decrypt) {
+    memset(tik_info, 0, 16);
+    for (u32 i = 0; i < tick_info->n_entries; i++) {
+        TicketEntry* tick_entry = tick_info->entries + i;
+        TitleKeyEntry* tik_entry = tik_info->entries + tik_info->n_entries;
+        if (!getbe64(tick_entry->ticket_id)) continue;
+        tik_entry->commonkey_idx = tick_entry->commonkey_idx;
+        memcpy(tik_entry->title_id, tick_entry->title_id, 8);
+        memcpy(tik_entry->titlekey, tick_entry->titlekey, 16);
+        if (decrypt) CryptTitleKey(tik_entry, false);
+        tik_info->n_entries++;
+    }
+    return 0;
 }
 
 u32 BuildFakeTicket(Ticket* ticket, u8* title_id) {
