@@ -1,0 +1,59 @@
+
+dirname   = $(shell dirname $(1))
+
+rwildcard = $(foreach d, $(wildcard $1*), \
+            $(filter $(subst *, %, $2), $d) \
+            $(call rwildcard, $d/, $2))
+
+FLAVOR  ?=  GodMode9
+README  :=  README.md
+SPLASH   =  resources/$(FLAVOR)_splash.pcx
+
+ifeq ($(FLAVOR),SafeMode9)
+    CFLAGS += -DSAFEMODE
+endif
+
+ifeq ($(SALTMODE),1)
+    CFLAGS += -DSALTMODE
+endif
+
+ifeq ($(SWITCH_SCREENS),1)
+    CFLAGS += -DSWITCH_SCREENS
+endif
+
+ifeq ($(SCRIPT_RUNNER),1)
+    CFLAGS += -DSCRIPT_RUNNER
+    README := 
+endif
+
+ifeq ($(AUTO_UNLOCK),1)
+    CFLAGS += -DAUTO_UNLOCK
+endif
+
+ifeq ($(TIMER_UNLOCK),1)
+    CFLAGS += -DTIMER_UNLOCK
+endif
+
+ifeq ($(HIDE_HIDDEN),1)
+    CFLAGS += -DHIDE_HIDDEN
+endif
+
+ifdef FIXED_BRIGHTNESS
+    CFLAGS += -DFIXED_BRIGHTNESS=$(FIXED_BRIGHTNESS)
+endif
+
+ifdef SD_TIMEOUT
+    CFLAGS += -DSD_TIMEOUT=$(SD_TIMEOUT)
+endif
+
+ifdef NTRBOOT
+    FTFLAGS  = -S spi-retail
+    FTDFLAGS = -S spi-dev
+    FIRM     = $(OUTDIR)/$(FLAVOR)_ntr.firm
+    FIRMD    = $(OUTDIR)/$(FLAVOR)_ntr_dev.firm
+else
+    FTFLAGS  = -S nand-retail
+    FTDFLAGS = -S nand-dev
+    FIRM     = $(OUTDIR)/$(FLAVOR).firm
+    FIRMD    = $(OUTDIR)/$(FLAVOR)_dev.firm
+endif
